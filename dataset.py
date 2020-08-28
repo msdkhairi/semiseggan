@@ -111,15 +111,6 @@ class TrainDataset(BaseDataset):
         depth = depth[:, :, s_h: e_h, s_w: e_w]
         label = label[:, :, s_h: e_h, s_w: e_w]
 
-
-        # # get the window coordinates of crop
-        # randomcrop = transforms.RandomCrop(settings.CROP_SIZE)
-        # i, j, h, w = randomcrop.get_params(image, (settings.CROP_SIZE, settings.CROP_SIZE))
-
-        # # apply the crop
-        # image = TF.crop(image, i, j, h, w)
-        # depth = TF.crop(depth, i, j, h, w)
-        # label = TF.crop(label, i, j, h, w)
         return image, depth, label
 
     def flip(self, image, depth, label):

@@ -39,7 +39,13 @@ def lr_poly_scheduler(optim_G, optim_D, init_lr, lr_decay_iter, iter, max_iter, 
     optim_D.param_groups[0]['lr'] = new_lr
 
 
-def make_D_label(label, ignore_mask):
+def make_D_label(label, D_output):
+    D_label = np.ones_like(D_output) * label
+    D_label = torch.tensor(D_label, dtype=torch.float64, requires_grad=True).cuda()
+    return D_label
+
+
+def make_D_label2(label, ignore_mask):
     ignore_mask = np.expand_dims(ignore_mask, axis=1)
     D_label = (np.ones(ignore_mask.shape)*label)
     D_label[ignore_mask] = settings.BCE_IGNORE_LABEL
@@ -107,9 +113,9 @@ def main():
     for i_iter in range(settings.MAX_ITER):
 
         # initialize losses
-        loss_G_seg = 0
-        loss_adv = 0
-        loss_D = 0
+        loss_G_seg_value = 0
+        loss_adv_value = 0
+        loss_D_value = 0
 
         # clear optim gradients and adjust learning rates
         optim_G.zero_grad()
@@ -130,6 +136,7 @@ def main():
 
         images, depths, labels = batch
         
+        # get a mask where is True for every pixel with ignore_label value
         ignore_mask = (labels.numpy() == settings.IGNORE_LABEL)
 
         # get the output of generator
@@ -142,10 +149,29 @@ def main():
         loss_G_seg = ce_loss(predict, labels)
 
         # calculate adversarial loss
-        
+        D_output = upsample(model_D(F.softmax(predict, dim=1)))
+        loss_adv = bce_loss(D_output, make_D_label(gt_label, D_output), np.logical_not(ignore_mask))
 
+        # accumulate loss, backward and store value
+        loss = loss_G_seg + settings.LAMBDA_ADV_SEG * loss_adv
+        loss.backward()
+
+        loss_G_seg_value += loss_G_seg.cpu().numpy()
+        loss_adv_value += loss_adv.cpu().numpy()
 
         ####### end of train generator #######
+
+
+        ####### train discriminator #######
+
+        # reset the gradient accumulation
+        for param in model_D.parameters():
+            param.requires_grad = True
+
+        predict = predict.detach()
+        
+
+        ####### end of train discriminator #######
 
 
 

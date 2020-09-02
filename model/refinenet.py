@@ -7,6 +7,8 @@ import torchvision
 import numpy as np
 import re
 
+import settings
+
 from model.layer_factory import conv3x3, CRPBlock, RCUBlock
 
 class RefineNet(nn.Module):
@@ -129,7 +131,7 @@ class RefineNet(nn.Module):
         return out
 
 
-    def optim_parameters(self, args):
+    def optim_parameters(self, lr):
         resnet_params = []
         decoder_params = []
         for k, v in self.named_parameters():
@@ -139,8 +141,8 @@ class RefineNet(nn.Module):
                 resnet_params.append(v)
             else:
                 decoder_params.append(v)
-        return [{'params': resnet_params, 'lr': args.learning_rate},
-                {'params': decoder_params, 'lr': 10*args.learning_rate}]
+        return [{'params': resnet_params, 'lr': lr},
+                {'params': decoder_params, 'lr': 10*lr}]
 
 
 class RefineNet_middle(RefineNet):

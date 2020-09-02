@@ -13,6 +13,25 @@ class CrossEntropyLoss2d(nn.Module):
         return output
 
 
+class BCEWithLogitsLoss2d(nn.Module):
+    def __init__(self, weight=None, reduction='mean'):
+        super(BCEWithLogitsLoss2d, self).__init__()
+        
+        self.loss = nn.BCEWithLogitsLoss(weight=weight, reduction=reduction)
+        
+
+    def forward(self, input, target, target_mask=None):
+        
+        if target_mask is not None:
+            target = target[target_mask]
+            input = input[target_mask]
+
+        output = self.loss(input, target)
+        return output
+
+
+
+
 if __name__ == "__main__":
     
     loss = CrossEntropyLoss2d()

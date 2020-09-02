@@ -2,15 +2,52 @@ import numpy as np
 from torch import Tensor
 
 
+# Dataset properties
+DATASET = 'sun'
+if DATASET == 'sun':
+    NUM_CLASSES = 38
+    DATA_ROOT = 'datasets/SUN_480x640_png_tiff/train/'
+    DATA_LIST = 'datasets/SUN_480x640_png_tiff/train/train.txt'
+    TRAIN_SIZE = 5285
+
+elif DATASET == 'nyu':
+    NUM_CLASSES = 41
+    DATA_ROOT = 'datasets/NYU_V2_png_tiff/train/'
+    DATA_LIST = 'datasets/NYU_V2_png_tiff/train/train.txt'
+    TRAIN_SIZE = 795
+
 # Data settings
-DATA_ROOT = '/path/to/VOC'
-DATA_LIST = None
+# DATASET = 'sun'
+# DATA_ROOT = '/path/to/VOC'
+# DATA_LIST = None
 IMG_MEAN = Tensor(np.array([0.485, 0.456, 0.406]))
 IMG_STD = Tensor(np.array([0.229, 0.224, 0.225]))
 DPT_MEAN = 0.37
 SCALE_RANGE = (0.5, 2.0)
 CROP_SIZE = 350
 IGNORE_LABEL = 0
-DPT_IGNORE_LABEL = -1
+DPT_IGNORE_LABEL = 0
 BCE_IGNORE_LABEL = -2
+
+# Model settings
+PRETRAINED = True
+MODALITY = 'middle'
+
+# Train settings
+DEVICE = 'gpu'
+LOG_DIR = 'somedir'
+
+MAX_ITER = 100000
+
+LR = 1e-5
+LR_MOMENTUM = 0.9
+LR_DECAY_ITER = 10
+LR_POLY_POWER = 0.9
+WEIGHT_DECAY = 1e-4
+
+LAMBDA_ADV_SEG = 1e-2
+
+BATCH_SIZE = 5
+NUM_WORKERS = 16
+
 

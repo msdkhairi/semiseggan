@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+import os.path as osp
 
 import torch
 import torch.nn as nn
@@ -20,9 +21,9 @@ class BaseDataset(data.Dataset):
         self.files = []
         self.img_ids = [id.strip() for id in open(self.data_list)]
         for id in self.img_ids:
-            image_file = osp.join(self.data_root, 'images/%s.png' % name)
-            depth_file = osp.join(self.data_root, 'depths_v2/%s.png' % name)
-            label_file = osp.join(self.data_root, 'GT/%s.png' % name)
+            image_file = osp.join(self.data_root, 'images/%s.png' % id)
+            depth_file = osp.join(self.data_root, 'depths_v2/%s.png' % id)
+            label_file = osp.join(self.data_root, 'GT/%s.png' % id)
             self.files.append({
                 "image": image_file,
                 "depth": depth_file,

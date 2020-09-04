@@ -4,13 +4,11 @@ from sklearn.metrics import confusion_matrix
 
 import settings
 
-def evaluate(label_gt, label_pred):
+def evaluate(conf_mat):
 
 
     ignore_label = settings.IGNORE_LABEL
     num_classes = settings.NUM_CLASSES
-
-    conf_mat = confusion_matrix(label_gt, label_pred, labels=np.arange(num_classes))
 
     # omit ignore label row and column from confusion matrix 
     if ignore_label >= 0 and ignore_label < num_classes:

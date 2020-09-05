@@ -3,7 +3,8 @@ from torch import Tensor
 
 
 # Dataset properties
-DATASET = 'sun'
+DATASET = 'nyu'
+
 if DATASET == 'sun':
     NUM_CLASSES = 38
     DATA_ROOT = 'datasets/SUN_480x640_png_tiff/train/'
@@ -12,17 +13,15 @@ if DATASET == 'sun':
 
 elif DATASET == 'nyu':
     NUM_CLASSES = 41
-    DATA_ROOT = 'datasets/NYU_V2_png_tiff/train/'
-    DATA_LIST = 'datasets/NYU_V2_png_tiff/train/train.txt'
+    DATA_ROOT = 'datasets/NYU_V2/train/'
+    DATA_LIST = 'datasets/NYU_V2/train/train.txt'
     TRAIN_SIZE = 795
 
 # Data settings
-# DATASET = 'sun'
-# DATA_ROOT = '/path/to/VOC'
-# DATA_LIST = None
 IMG_MEAN = Tensor(np.array([0.485, 0.456, 0.406]))
 IMG_STD = Tensor(np.array([0.229, 0.224, 0.225]))
-DPT_MEAN = 0.37
+DPT_MEAN = 0.229
+DPT_STD = 0.154
 SCALE_RANGE = (0.5, 2.0)
 CROP_SIZE = 350
 IGNORE_LABEL = 0
@@ -31,13 +30,15 @@ BCE_IGNORE_LABEL = -2
 
 # Model settings
 PRETRAINED = True
-MODALITY = 'middle'
+MODALITY = 'rgb'
 
 # Train settings
 DEVICE = 'gpu'
-LOG_DIR = 'somedir'
+LOG_DIR = 'gan1_rgb'
+SAVE_EVERY = 10000
 
-MAX_ITER = 100000
+MAX_ITER = 70000
+
 
 LR = 1e-5
 LR_MOMENTUM = 0.9

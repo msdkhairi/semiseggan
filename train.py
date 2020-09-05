@@ -143,7 +143,7 @@ def main():
         images, depths, labels = batch
         images = images.cuda()
         depths = depths.cuda()
-        depths = depths.cuda()
+        labels = labels.cuda()
         
         # get a mask where is True for every pixel with ignore_label value
         ignore_mask = (labels.numpy() == settings.IGNORE_LABEL)

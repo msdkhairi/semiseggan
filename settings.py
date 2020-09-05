@@ -20,8 +20,8 @@ elif DATASET == 'nyu':
 # Data settings
 IMG_MEAN = Tensor(np.array([0.485, 0.456, 0.406]))
 IMG_STD = Tensor(np.array([0.229, 0.224, 0.225]))
-DPT_MEAN = 0.229
-DPT_STD = 0.154
+DPT_MEAN = (0.229,)
+DPT_STD = (0.154,)
 SCALE_RANGE = (0.5, 2.0)
 CROP_SIZE = 350
 IGNORE_LABEL = 0

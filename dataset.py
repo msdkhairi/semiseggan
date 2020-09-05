@@ -22,7 +22,7 @@ class BaseDataset(data.Dataset):
         self.img_ids = [id.strip() for id in open(self.data_list)]
         for id in self.img_ids:
             image_file = osp.join(self.data_root, 'images/%s.png' % id)
-            depth_file = osp.join(self.data_root, 'depths_v2/%s.png' % id)
+            depth_file = osp.join(self.data_root, 'depths/%s.png' % id)
             label_file = osp.join(self.data_root, 'GT/%s.png' % id)
             self.files.append({
                 "image": image_file,
@@ -49,7 +49,7 @@ class BaseDataset(data.Dataset):
 
         # normalize image and depth
         image = TF.normalize(image, settings.IMG_MEAN, settings.IMG_STD)
-        depth = TF.normalize(depth, settings.DPT_MEAN, 1)
+        depth = TF.normalize(depth, settings.DPT_MEAN, settings.DPT_STD)
 
         # add aditional dimension
         image = image.unsqueeze(dim=0)

@@ -1,4 +1,5 @@
 import os
+import os.path as osp
 import numpy as np
 
 import torch
@@ -10,11 +11,15 @@ import torch.optim as optim
 
 from torch.utils.tensorboard import SummaryWriter
 
+from sklearn.metrics import confusion_matrix
+
 from model.refinenet import Segmentor
 from model.discriminator import Discriminator
 from dataset import TrainDataset
 
 from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d
+
+from metric import evaluate
 
 import settings
 
@@ -36,7 +41,7 @@ def lr_poly_scheduler(optim_G, optim_D, init_lr, lr_decay_iter, iter, max_iter, 
     optim_G.param_groups[1]['lr'] = new_lr * 10
 
     # set optim_D lr
-    optim_D.param_groups[0]['lr'] = new_lr
+    optim_D.param_groups[0]['lr'] = new_lr * 10
 
 
 def make_D_label(label, D_output):
@@ -77,9 +82,10 @@ def main():
     model_D.train()
     model_D.cuda()
 
-    # snapshot
+    # snapshot and logg
     snapshot_dir = './snapshots_' + settings.DATASET + "_" + settings.LOG_DIR + "/"
     makedir(snapshot_dir)
+    log_file = "log_" + settings.DATASET + "_" + settings.LOG_DIR + ".txt"
 
     # dataset and dataloader
     dataset = TrainDataset()
@@ -94,7 +100,7 @@ def main():
                         momentum=settings.LR_MOMENTUM, weight_decay=settings.WEIGHT_DECAY)
 
     # optimizer for discriminator network
-    optim_D = optim.Adam(model_D.parameters(), settings.LR)
+    optim_D = optim.Adam(model_D.parameters(), settings.LR*10)
 
     # losses
     ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor
@@ -114,7 +120,7 @@ def main():
 
         # initialize losses
         loss_G_seg_value = 0
-        loss_adv_value = 0
+        loss_adv_seg_value = 0
         loss_D_value = 0
 
         # clear optim gradients and adjust learning rates
@@ -138,6 +144,7 @@ def main():
         
         # get a mask where is True for every pixel with ignore_label value
         ignore_mask = (labels.numpy() == settings.IGNORE_LABEL)
+        target_mask = np.logical_not(ignore_mask)
 
         # get the output of generator
         if settings.MODALITY == 'rgb':
@@ -150,28 +157,105 @@ def main():
 
         # calculate adversarial loss
         D_output = upsample(model_D(F.softmax(predict, dim=1)))
-        loss_adv = bce_loss(D_output, make_D_label(gt_label, D_output), np.logical_not(ignore_mask))
+        loss_adv = bce_loss(D_output, make_D_label(gt_label, D_output), target_mask)
 
         # accumulate loss, backward and store value
         loss = loss_G_seg + settings.LAMBDA_ADV_SEG * loss_adv
         loss.backward()
 
         loss_G_seg_value += loss_G_seg.cpu().numpy()
-        loss_adv_value += loss_adv.cpu().numpy()
+        loss_adv_seg_value += loss_adv.cpu().numpy()
 
         ####### end of train generator #######
 
 
         ####### train discriminator #######
 
+        # pass prediction to discriminator
+
         # reset the gradient accumulation
         for param in model_D.parameters():
             param.requires_grad = True
 
+        # detach from G
         predict = predict.detach()
         
+        D_output = upsample(model_D(F.softmax(predict, dim=1)))
+        loss_D = bce_loss(D_output, make_D_label(pred_label, D_output), target_mask)
+        loss_D.backward()
+        loss_D_value += loss_D.data.cpu().numpy()
+
+        # pass ground truth to discriminator
+        
+        gt_one_hot = F.one_hot(labels, num_classes=settings.NUM_CLASSES)
+        D_output = upsample(model_D(gt_one_hot))
+
+        loss_D = bce_loss(D_output, make_D_label(gt_label, D_output), target_mask)
+        loss_D.backward()
+        loss_D_value += loss_D.data.cpu().numpy()
 
         ####### end of train discriminator #######
+
+        optim_G.step()
+        optim_D.step()
+
+        # get pred and gt to compute confusion matrix
+        seg_pred = np.argmax(predict.cpu().numpy(), axis=1)
+        seg_gt = labels.cpu().numpy().copy()
+
+        conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
+
+        ####### log ########
+        if i_iter % ((settings.TRAIN_SIZE // settings.BATCH_SIZE)) == 0 and i_iter != 0:
+            metrics = evaluate(conf_mat)
+            writer.add_scalar('Pixel Accuracy/Train', metrics['pAcc'], i_iter)
+            writer.add_scalar('Mean Accuracy/Train', metrics['mAcc'], i_iter)
+            writer.add_scalar('mIoU/Train', metrics['mIoU'], i_iter)
+            writer.add_scalar('fwavacc/Train', metrics['fIoU'], i_iter)
+            conf_mat = np.zeros_like(conf_mat)
+
+        writer.add_scalar('Loss_G_SEG/Train', loss_G_seg_value, i_iter)
+        writer.add_scalar('Loss_D/Train', loss_D_value, i_iter)
+        writer.add_scalar('Loss_G_SEG_adv/Train', loss_adv_seg_value, i_iter)
+        writer.add_scalar('learning_rate_G/Train', optim_G.param_groups[0]['lr'], i_iter)
+        writer.add_scalar('learning_rate_D/Train', optim_D.param_groups[0]['lr'], i_iter)
+
+
+        print(  "iter = {:6d}/{:6d},\t loss_seg = {:.3f}, loss_adv = {:.3f}, loss_D = {:.3f}".format(
+                i_iter, settings.MAX_ITER,
+                loss_G_seg_value, 
+                loss_adv_seg_value,  
+                loss_D_value))
+
+        
+        f = open(log_file, "a")
+        output_log = '{:.8f},\t {:.8f},\t {:.8f}\n'.format(
+            loss_G_seg_value, 
+            loss_adv_seg_value,
+            loss_D_value)
+        f.write(output_log)
+        f.close()
+
+        # taking snapshot
+        if i_iter >= settings.MAX_ITER:
+            print('saving the final model ...')
+            torch.save(model_G.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(settings.MAX_ITER)+'.pth'))
+            torch.save(model_D.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(settings.MAX_ITER)+'_D.pth'))
+            break
+
+        if i_iter % settings.SAVE_EVERY == 0 and i_iter != 0:
+            print('taking snapshot ...')
+            torch.save(model_G.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(i_iter)+'.pth'))
+            torch.save(model_D.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(i_iter)+'_D.pth'))
+        
+        
+if __name__ == "__main__":
+    main()
+
+
+
+
+
 
 
 

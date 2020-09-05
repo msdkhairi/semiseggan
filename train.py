@@ -138,7 +138,11 @@ def main():
             param.requires_grad = False
 
         # get the batch of data
-        _, batch = next(dataloader_iter)
+        try:
+            _, batch = next(dataloader_iter)
+        except:
+            dataloader_iter = enumerate(dataloader)
+            _, batch = next(dataloader_iter)
 
         images, depths, labels = batch
         images = images.cuda()

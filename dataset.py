@@ -152,3 +152,8 @@ class TestDataset(BaseDataset):
         image, depth, label = sample['image'], sample['depth'], sample['label']
         return image, depth, label
 
+
+if __name__ == "__main__":
+    traindataset = TrainDataset(data_root=settings.DATA_ROOT, data_list=settings.DATA_LIST)
+    image , depth, label = traindataset.__getitem__(0)
+    print(image.shape, depth.shape, label.shape)

@@ -45,8 +45,8 @@ def lr_poly_scheduler(optim_G, optim_D, init_lr, lr_decay_iter, iter, max_iter, 
 
 
 def make_D_label(label, D_output):
-    D_label = np.ones_like(D_output) * label
-    D_label = torch.tensor(D_label, dtype=torch.float64, requires_grad=True).cuda()
+    D_label = torch.ones_like(D_output) * label
+    D_label = D_label.clone().detach().requires_grad_(True).cuda()
     return D_label
 
 
@@ -146,8 +146,9 @@ def main():
         labels = labels.cuda()
         
         # get a mask where is True for every pixel with ignore_label value
-        ignore_mask = (labels.numpy() == settings.IGNORE_LABEL)
-        target_mask = np.logical_not(ignore_mask)
+        ignore_mask = (labels == settings.IGNORE_LABEL)
+        target_mask = torch.logical_not(ignore_mask)
+        target_mask = target_mask.unsqueeze(dim=1)
 
         # get the output of generator
         if settings.MODALITY == 'rgb':
@@ -166,8 +167,8 @@ def main():
         loss = loss_G_seg + settings.LAMBDA_ADV_SEG * loss_adv
         loss.backward()
 
-        loss_G_seg_value += loss_G_seg.cpu().numpy()
-        loss_adv_seg_value += loss_adv.cpu().numpy()
+        loss_G_seg_value += loss_G_seg.data.cpu().numpy()
+        loss_adv_seg_value += loss_adv.data.cpu().numpy()
 
         ####### end of train generator #######
 
@@ -190,7 +191,7 @@ def main():
 
         # pass ground truth to discriminator
         
-        gt_one_hot = F.one_hot(labels, num_classes=settings.NUM_CLASSES)
+        gt_one_hot = F.one_hot(labels, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).float()
         D_output = upsample(model_D(gt_one_hot))
 
         loss_D = bce_loss(D_output, make_D_label(gt_label, D_output), target_mask)

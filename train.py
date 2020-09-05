@@ -207,6 +207,9 @@ def main():
         seg_pred = np.argmax(predict.cpu().numpy(), axis=1)
         seg_gt = labels.cpu().numpy().copy()
 
+        seg_pred = seg_pred[target_mask.squeeze(dim=1).cpu().numpy()]
+        seg_gt = seg_gt[target_mask.squeeze(dim=1).cpu().numpy()]
+
         conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
 
         ####### log ########

@@ -117,9 +117,9 @@ class TrainDataset(BaseDataset):
     def flip(self, image, depth, label):
 
         if np.random.rand() < 0.5:
-            image = TF.hflip(image)
-            depth = TF.hflip(depth)
-            label = TF.hflip(label)
+            image = torch.flip(image, [3])
+            depth = torch.flip(depth, [3])
+            label = torch.flip(label, [3])
 
         return image, depth, label
 

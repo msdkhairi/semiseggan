@@ -241,7 +241,7 @@ class RefineNet_middle(RefineNet):
         return out
 
 
-def Segmentor(pretrained=True, num_classes=38, modality='middle'):
+def Segmentor(pretrained=True, num_classes=38, modality='rgb'):
 
     model = None
     if modality == 'rgb' or modality == 'depth':

@@ -23,6 +23,7 @@ class RefineNet(nn.Module):
                                stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         # resent
         resnet = torchvision.models.resnet101(pretrained=pretrained)

@@ -133,7 +133,7 @@ class TrainDataset(BaseDataset):
         image, depth, label = self.crop(image, depth, label)
         image, depth, label = self.flip(image, depth, label)
 
-        return image[0], depth[0], label[0, 0].long()
+        return image[0], depth[0].repeat(3, 1, 1), label[0, 0].long()
 
 
 

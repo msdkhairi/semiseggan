@@ -195,7 +195,8 @@ def main():
 
         # pass ground truth to discriminator
         
-        gt_one_hot = F.one_hot(labels, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).float()
+        gt = labels.clone().detach().requires_grad_(True).cuda()
+        gt_one_hot = F.one_hot(gt, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).float()
         D_output = upsample(model_D(gt_one_hot))
 
         loss_D = bce_loss(D_output, make_D_label(gt_label, D_output), target_mask)

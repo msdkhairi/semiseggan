@@ -195,7 +195,7 @@ def main():
 
         # pass ground truth to discriminator
         
-        gt = labels.clone().detach().requires_grad_(True).cuda()
+        gt = labels.clone().detach().cuda()
         gt_one_hot = F.one_hot(gt, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).float()
         D_output = upsample(model_D(gt_one_hot))
 

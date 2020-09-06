@@ -156,4 +156,6 @@ class TestDataset(BaseDataset):
 if __name__ == "__main__":
     traindataset = TrainDataset(data_root=settings.DATA_ROOT, data_list=settings.DATA_LIST)
     image , depth, label = traindataset.__getitem__(0)
-    print(image.shape, depth.shape, label.shape)
+    print("image:\t shape= {},\t min= {},\t, mean= {}, \t max= {}".format(image.shape, image.min(), image.mean(), image.max()))
+    print("depth:\t shape= {},\t min= {},\t, mean= {}, \t max= {}".format(depth.shape, depth.min(), depth.mean(), depth.max()))
+    print("label:\t shape= {},\t values={}".format(label.shape, torch.unique(label)))

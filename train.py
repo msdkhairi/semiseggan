@@ -29,19 +29,20 @@ def makedir(directory):
         os.makedirs(directory)
 
 
-def lr_poly_scheduler(optim_G, optim_D, init_lr, lr_decay_iter, iter, max_iter, poly_power):
+def lr_poly_scheduler(optim_G, optim_D, init_lr, init_lr_D, lr_decay_iter, iter, max_iter, poly_power):
     if iter % lr_decay_iter or iter > max_iter:
         return
 
     # calculate new lr
     new_lr = init_lr * (1 - float(iter) / max_iter) ** poly_power
+    new_lr_D = init_lr_D * (1 - float(iter) / max_iter) ** poly_power
 
     # set optim_G lr
     optim_G.param_groups[0]['lr'] = new_lr
     optim_G.param_groups[1]['lr'] = new_lr * 10
 
     # set optim_D lr
-    optim_D.param_groups[0]['lr'] = new_lr * 10
+    optim_D.param_groups[0]['lr'] = new_lr_D
 
 
 def make_D_label(label, D_output):
@@ -100,7 +101,7 @@ def main():
                         momentum=settings.LR_MOMENTUM, weight_decay=settings.WEIGHT_DECAY)
 
     # optimizer for discriminator network
-    optim_D = optim.Adam(model_D.parameters(), settings.LR*10)
+    optim_D = optim.Adam(model_D.parameters(), settings.LR_D)
 
     # losses
     ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor
@@ -127,7 +128,7 @@ def main():
         optim_G.zero_grad()
         optim_D.zero_grad()
 
-        lr_poly_scheduler(optim_G, optim_D, settings.LR, settings.LR_DECAY_ITER, 
+        lr_poly_scheduler(optim_G, optim_D, settings.LR, settings.LR_D, settings.LR_DECAY_ITER, 
                         i_iter, settings.MAX_ITER, settings.LR_POLY_POWER)
 
         

@@ -23,7 +23,7 @@ class BaseDataset(data.Dataset):
         for id in self.img_ids:
             image_file = osp.join(self.data_root, 'images/%s.png' % id)
             depth_file = osp.join(self.data_root, 'depths/%s.png' % id)
-            label_file = osp.join(self.data_root, 'GT/%s.png' % id)
+            label_file = osp.join(self.data_root, 'labels/%s.png' % id)
             self.files.append({
                 "image": image_file,
                 "depth": depth_file,

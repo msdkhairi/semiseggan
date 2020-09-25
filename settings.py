@@ -32,9 +32,17 @@ BCE_IGNORE_LABEL = -2
 PRETRAINED = True
 MODALITY = 'rgb'
 
+# logging
+LOG_DIR_ROOT = './'
+LOG_DIR = 'gan1_rgb'
+TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
+SNAPSHOT_DIR = LOG_DIR_ROOT + 'snapshots_' + DATASET + '_' + LOG_DIR
+LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
+
+
+
 # Train settings
 DEVICE = 'gpu'
-LOG_DIR = 'gan1_rgb'
 SAVE_EVERY = 10000
 
 MAX_ITER = 70000
@@ -51,5 +59,6 @@ LAMBDA_ADV_SEG = 1e-2
 
 BATCH_SIZE = 5
 NUM_WORKERS = 16
+
 
 

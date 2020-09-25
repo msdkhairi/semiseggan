@@ -62,9 +62,10 @@ def make_D_label2(label, ignore_mask):
 
 def main():
 
-    # tensorboard writer
-    write_dir = "runs/" + settings.DATASET + "/"+ settings.LOG_DIR
-    writer = SummaryWriter(write_dir)
+     # tensorboard writer
+    writer = SummaryWriter(settings.TENSORBOARD_DIR)
+    # makedir snapshot
+    makedir(settings.SNAPSHOT_DIR)
 
     # enable cudnn 
     torch.backends.cudnn.enabled = True
@@ -83,10 +84,6 @@ def main():
     model_D.train()
     model_D.cuda()
 
-    # snapshot and logg
-    snapshot_dir = './snapshots_' + settings.DATASET + "_" + settings.LOG_DIR + "/"
-    makedir(snapshot_dir)
-    log_file = "log_" + settings.DATASET + "_" + settings.LOG_DIR + ".txt"
 
     # dataset and dataloader
     dataset = TrainDataset()
@@ -241,25 +238,25 @@ def main():
                 loss_D_value))
 
         
-        f = open(log_file, "a")
-        output_log = '{:.8f},\t {:.8f},\t {:.8f}\n'.format(
+        with open(settings.LOG_FILE, "a") as f:
+            output_log = '{:6d},\t {:.8f},\t {:.8f},\t {:.8f}\n'.format(
+            i_iter,
             loss_G_seg_value, 
             loss_adv_seg_value,
             loss_D_value)
-        f.write(output_log)
-        f.close()
+            f.write(output_log)
 
         # taking snapshot
         if i_iter >= settings.MAX_ITER:
             print('saving the final model ...')
-            torch.save(model_G.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(settings.MAX_ITER)+'.pth'))
-            torch.save(model_D.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(settings.MAX_ITER)+'_D.pth'))
+            torch.save(model_G.state_dict(),osp.join(settings.SNAPSHOT_DIR, 'MODEL_'+str(settings.MAX_ITER)+'.pth'))
+            torch.save(model_D.state_dict(),osp.join(settings.SNAPSHOT_DIR, 'MODEL_'+str(settings.MAX_ITER)+'_D.pth'))
             break
 
         if i_iter % settings.SAVE_EVERY == 0 and i_iter != 0:
             print('taking snapshot ...')
-            torch.save(model_G.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(i_iter)+'.pth'))
-            torch.save(model_D.state_dict(),osp.join(snapshot_dir, 'MODEL_'+str(i_iter)+'_D.pth'))
+            torch.save(model_G.state_dict(),osp.join(settings.SNAPSHOT_DIR, 'MODEL_'+str(i_iter)+'.pth'))
+            torch.save(model_D.state_dict(),osp.join(settings.SNAPSHOT_DIR, 'MODEL_'+str(i_iter)+'_D.pth'))
         
         
 if __name__ == "__main__":

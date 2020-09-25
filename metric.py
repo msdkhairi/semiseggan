@@ -8,10 +8,9 @@ def evaluate(conf_mat):
 
 
     ignore_label = settings.IGNORE_LABEL
-    num_classes = settings.NUM_CLASSES
 
     # omit ignore label row and column from confusion matrix 
-    if ignore_label >= 0 and ignore_label < num_classes:
+    if ignore_label >= 0 and ignore_label < settings.NUM_CLASSES:
         row_omitted = np.delete(conf_mat, ignore_label, axis=0)
         conf_mat = np.delete(row_omitted, ignore_label, axis=1)
 

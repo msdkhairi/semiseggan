@@ -150,7 +150,7 @@ class TestDataset(BaseDataset):
     def __getitem__(self, idx):
         sample = self.get_data(idx)
         image, depth, label = sample['image'], sample['depth'], sample['label']
-        return image, depth, label
+        return image[0], depth[0].repeat(3, 1, 1), label[0, 0].long()
 
 
 if __name__ == "__main__":

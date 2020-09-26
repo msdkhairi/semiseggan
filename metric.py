@@ -26,8 +26,8 @@ def evaluate(conf_mat):
     return {
         'pAcc' : acc,
         'mAcc': acc_cls,
-        'iou' : iou,
         'fIoU': fwavacc,
         'mIoU': mean_iou,
+        'iou' : iou,
     }
 

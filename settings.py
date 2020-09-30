@@ -13,8 +13,10 @@ if DATASET == 'sun':
 
 elif DATASET == 'nyu':
     NUM_CLASSES = 41
-    DATA_ROOT = 'datasets/NYU_V2/train/'
-    DATA_LIST = 'datasets/NYU_V2/train/train.txt'
+    DATA_ROOT = 'drive/My Drive/datasets/nyuv2/train/'
+    DATA_LIST = 'drive/My Drive/datasets/nyuv2/train/train.txt'
+    DATA_ROOT_VAL = 'drive/My Drive/datasets/nyuv2/val/'
+    DATA_LIST_VAL = 'drive/My Drive/datasets/nyuv2/val/val.txt'
     TRAIN_SIZE = 795
 
 # Data settings
@@ -33,11 +35,17 @@ PRETRAINED = True
 MODALITY = 'rgb'
 
 # logging
-LOG_DIR_ROOT = './'
-LOG_DIR = 'gan1_rgb'
+LOG_DIR_ROOT = 'drive/My Drive/Logs/'
+LOG_DIR = 'refienenet_rgb'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
-SNAPSHOT_DIR = LOG_DIR_ROOT + 'snapshots_' + DATASET + '_' + LOG_DIR
+CHECKPOINT_DIR = LOG_DIR_ROOT + 'snapshots_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
+
+
+# Eval settings
+LAST_CHECKPOINT = 'snapshots_nyu_refinenet_rgb/MODEL_60000.pth'
+OUTPUT_FILE = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '.txt'
+OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 
 
 
@@ -57,7 +65,7 @@ WEIGHT_DECAY = 1e-4
 
 LAMBDA_ADV_SEG = 1e-2
 
-BATCH_SIZE = 5
+BATCH_SIZE = 8
 NUM_WORKERS = 16
 
 

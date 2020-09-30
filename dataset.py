@@ -133,14 +133,16 @@ class TrainDataset(BaseDataset):
         image, depth, label = self.crop(image, depth, label)
         image, depth, label = self.flip(image, depth, label)
 
-        return image[0], depth[0].repeat(3, 1, 1), label[0, 0].long()
+        return image, depth, label
 
 
 
     def __getitem__(self, idx):
         sample = self.get_data(idx)
         image, depth, label = self.transform(sample)
-        return image, depth, label
+
+        return image[0], depth[0].repeat(3, 1, 1), label[0, 0].long()
+        
 
 
 class TestDataset(BaseDataset):

@@ -38,7 +38,7 @@ MODALITY = 'rgb'
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
 LOG_DIR = 'refienenet_rgb'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
-CHECKPOINT_DIR = LOG_DIR_ROOT + 'snapshots_' + DATASET + '_' + LOG_DIR
+CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
 
 
@@ -52,8 +52,10 @@ OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 # Train settings
 DEVICE = 'gpu'
 SAVE_EVERY = 10000
+CHECKPOINT_FREQ = 50
 
 MAX_ITER = 70000
+EPOCHS = 500
 
 
 LR = 5e-4

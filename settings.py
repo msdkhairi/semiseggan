@@ -42,8 +42,9 @@ CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
 
 
-# Eval settings
-LAST_CHECKPOINT = 'snapshots_nyu_refinenet_rgb/MODEL_60000.pth'
+# 
+RESUME_TRAIN = True
+LAST_CHECKPOINT = LOG_DIR_ROOT + 'checkpoints_nyu_refinenet_rgb/CHECKPOINT_350.pth'
 OUTPUT_FILE = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '.txt'
 OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 

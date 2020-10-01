@@ -42,10 +42,10 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
 
     data_size = len(dataloader)
 
-    for i_iter, batch in enumerate(dataloader):
+    # initialize losses
+    loss_G_seg_values = []
 
-        # initialize losses
-        loss_G_seg_value = 0
+    for i_iter, batch in enumerate(dataloader):
 
         images, depths, labels = batch
         images = images.cuda()
@@ -72,30 +72,32 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
         loss_G_seg.backward()
         optimizer.step()
 
-        loss_G_seg_value += loss_G_seg.data.cpu().numpy()
+        loss_G_seg_values.append(loss_G_seg.data.cpu().numpy())
 
-        # get pred and gt to compute confusion matrix
-        seg_pred = np.argmax(predict.detach().cpu().numpy(), axis=1)
-        seg_gt = labels.cpu().numpy().copy()
+        # # get pred and gt to compute confusion matrix
+        # seg_pred = np.argmax(predict.detach().cpu().numpy(), axis=1)
+        # seg_gt = labels.cpu().numpy().copy()
 
-        seg_pred = seg_pred[target_mask.squeeze(dim=1).cpu().numpy()]
-        seg_gt = seg_gt[target_mask.squeeze(dim=1).cpu().numpy()]
+        # seg_pred = seg_pred[target_mask.squeeze(dim=1).cpu().numpy()]
+        # seg_gt = seg_gt[target_mask.squeeze(dim=1).cpu().numpy()]
 
-        conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
+        # conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
 
-        with open(settings.LOG_FILE, "a") as f:
-            output_log = '{}, {},\t {:.8f}\n'.format(epoch, i_iter, loss_G_seg_value)
-            f.write(output_log)
+        # with open(settings.LOG_FILE, "a") as f:
+        #     output_log = '{}, {},\t {:.8f}\n'.format(epoch, i_iter, loss_G_seg_value)
+        #     f.write(output_log)
 
         
-        if i_iter % print_freq == 0:
+        if i_iter % print_freq == 0 and i_iter != 0:
+            loss_G_seg_value = np.mean(loss_G_seg_values)
+            loss_G_seg_values = []
             writer.add_scalar('Loss_G_SEG/Train', loss_G_seg_value, i_iter+epoch*data_size)
             writer.add_scalar('learning_rate_G/Train', optimizer.param_groups[0]['lr'], i_iter+epoch*data_size)
 
             print("epoch = {:3d}/{:3d}: iter = {:3d},\t loss_seg = {:.3f}".format(
-                epoch, settings.EPOCHS, settings.MAX_ITER, loss_G_seg_value))
+                epoch, settings.EPOCHS, i_iter, loss_G_seg_value))
 
-    save_metrics(conf_mat, writer, epoch)
+    # save_metrics(conf_mat, writer, epoch)
 
     
 
@@ -141,10 +143,19 @@ def main():
     # upsampling for the network output
     upsample = nn.Upsample(size=(settings.CROP_SIZE, settings.CROP_SIZE), mode='bilinear', align_corners=True)
     
-    for epoch in range(settings.EPOCHS):
+    last_epoch = -1
+    if settings.RESUME_TRAIN:
+        checkpoint = torch.load(settings.LAST_CHECKPOINT)
+
+        last_epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
+
+    for epoch in range(last_epoch+1, settings.EPOCHS):
 
         train_one_epoch(model, optimizer, dataloader, epoch, 
-                        upsample, ce_loss, writer, print_freq=10)
+                        upsample, ce_loss, writer, print_freq=5)
 
         lr_scheduler.step()
 
@@ -155,11 +166,14 @@ def main():
                 'optimizer_state_dict': optimizer.state_dict(),
                 'lr_scheduler_state_dict': lr_scheduler.state_dict()
             }
+            print('saving a checkpoint in epoch {}'.format(epoch))
+            torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch)+'.tar'))
 
+        # save the final model
+        if epoch >= settings.EPOCHS-1:
+            print('saving the final model')
             torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch+1)+'.tar'))
 
-    # save the final model
-    torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch+1)+'.tar'))
         
 
 

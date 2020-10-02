@@ -32,19 +32,19 @@ BCE_IGNORE_LABEL = -2
 
 # Model settings
 PRETRAINED = True
-MODALITY = 'rgb'
+MODALITY = 'middle'
 
 # logging
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
-LOG_DIR = 'refienenet_rgb'
+LOG_DIR = 'refinenet_middle'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
 CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
 
 
 # 
-RESUME_TRAIN = True
-LAST_CHECKPOINT = LOG_DIR_ROOT + 'checkpoints_nyu_refinenet_rgb/CHECKPOINT_350.pth'
+RESUME_TRAIN = False
+LAST_CHECKPOINT = CHECKPOINT_DIR + '/CHECKPOINT_500.tar'
 OUTPUT_FILE = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '.txt'
 OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 

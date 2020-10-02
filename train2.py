@@ -40,7 +40,7 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
     # confusion matrix ; to track metrics such as mIoU during training
     conf_mat = np.zeros((settings.NUM_CLASSES, settings.NUM_CLASSES))
 
-    data_size = len(dataloader)
+    max_iter = len(dataloader)
 
     # initialize losses
     loss_G_seg_values = []
@@ -91,15 +91,24 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
         if i_iter % print_freq == 0 and i_iter != 0:
             loss_G_seg_value = np.mean(loss_G_seg_values)
             loss_G_seg_values = []
-            writer.add_scalar('Loss_G_SEG/Train', loss_G_seg_value, i_iter+epoch*data_size)
-            writer.add_scalar('learning_rate_G/Train', optimizer.param_groups[0]['lr'], i_iter+epoch*data_size)
+            writer.add_scalar('Loss_G_SEG/Train', loss_G_seg_value, i_iter+epoch*max_iter)
+            writer.add_scalar('learning_rate_G/Train', optimizer.param_groups[0]['lr'], i_iter+epoch*max_iter)
 
             print("epoch = {:3d}/{:3d}: iter = {:3d},\t loss_seg = {:.3f}".format(
                 epoch, settings.EPOCHS, i_iter, loss_G_seg_value))
 
     # save_metrics(conf_mat, writer, epoch)
 
-    
+def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'lr_scheduler_state_dict': lr_scheduler.state_dict()
+        }
+    if verbose:
+        print('saving a checkpoint in epoch {}'.format(epoch))
+    torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch)+'.tar'))
 
 def main():
 
@@ -126,15 +135,13 @@ def main():
                                 shuffle=True, num_workers=settings.NUM_WORKERS,
                                 pin_memory=True, drop_last=True)
 
-    dataloader_iter = enumerate(dataloader)
-
     # optimizer for generator network (segmentor)
     optimizer = optim.SGD(model.optim_parameters(settings.LR), lr=settings.LR, 
                         momentum=settings.LR_MOMENTUM, weight_decay=settings.WEIGHT_DECAY)
 
     # lr scheduler for optimizer
     lr_lambda = lambda epoch: (1 - epoch / settings.EPOCHS) ** settings.LR_POLY_POWER
-    lr_scheduler = optim.lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lr_lambda)
+    lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 
 
     # losses
@@ -147,36 +154,33 @@ def main():
     if settings.RESUME_TRAIN:
         checkpoint = torch.load(settings.LAST_CHECKPOINT)
 
-        last_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])
+        model.train()
+        model.cuda()
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
+        last_epoch = checkpoint['epoch']
+        
+
+        # purge the logs after the last_epoch
+        writer = SummaryWriter(settings.TENSORBOARD_DIR, purge_step=(last_epoch+1)*len(dataloader))
+
+
 
     for epoch in range(last_epoch+1, settings.EPOCHS):
 
         train_one_epoch(model, optimizer, dataloader, epoch, 
                         upsample, ce_loss, writer, print_freq=5)
 
-        lr_scheduler.step()
-
         if epoch % settings.CHECKPOINT_FREQ == 0 and epoch != 0:
-            checkpoint = {
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'lr_scheduler_state_dict': lr_scheduler.state_dict()
-            }
-            print('saving a checkpoint in epoch {}'.format(epoch))
-            torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch)+'.tar'))
+            save_checkpoint(epoch, model, optimizer, lr_scheduler)
 
         # save the final model
         if epoch >= settings.EPOCHS-1:
             print('saving the final model')
-            torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch+1)+'.tar'))
+            save_checkpoint(epoch+1, model, optimizer, lr_scheduler)
 
-        
-
-
+        lr_scheduler.step()
         
         
 if __name__ == "__main__":

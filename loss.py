@@ -13,6 +13,24 @@ class CrossEntropyLoss2d(nn.Module):
         return loss
 
 
+class FocalLoss(nn.Module):
+
+    def __init__(self, weight=None, ignore_index=0, reduction='mean', gamma=2):
+        super(FocalLoss, self).__init__()
+
+        self.cross_entropy = nn.CrossEntropyLoss(weight=weight, ignore_index=ignore_index, reduction=reduction)
+        
+        self.gamma = gamma
+
+    def forward(self, input, target):
+        
+        ce = self.cross_entropy(input, target)
+        pt = torch.exp(-ce)
+
+        loss = ce * (1 - pt)**self.gamma
+        return loss
+
+
 class BCEWithLogitsLoss2d(nn.Module):
     def __init__(self, weight=None, reduction='mean'):
         super(BCEWithLogitsLoss2d, self).__init__()

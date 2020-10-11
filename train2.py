@@ -12,10 +12,10 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.metrics import confusion_matrix
 
-from model.refinenet import Segmentor
+from model.refinenet2 import Segmentor
 from dataset import TrainDataset
 
-from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d
+from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d, FocalLoss
 
 from metric import evaluate
 
@@ -146,6 +146,8 @@ def main():
 
     # losses
     ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor
+    # ce_loss = FocalLoss(ignore_index=settings.IGNORE_LABEL, gamma=2)
+
 
     # upsampling for the network output
     upsample = nn.Upsample(size=(settings.CROP_SIZE, settings.CROP_SIZE), mode='bilinear', align_corners=True)

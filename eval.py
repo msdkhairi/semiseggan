@@ -61,9 +61,10 @@ def main():
     if not os.path.exists(settings.OUTPUT_DIR):
         os.makedirs(settings.OUTPUT_DIR)
 
+    checkpoint = torch.load(settings.LAST_CHECKPOINT)
+
     model = Segmentor(num_classes=settings.NUM_CLASSES, modality=settings.MODALITY)
-    saved_state_dict = torch.load(settings.LAST_CHECKPOINT)
-    model.load_state_dict(saved_state_dict)
+    model.load_state_dict(checkpoint['model_state_dict'])
 
     model.eval()
     model.cuda()

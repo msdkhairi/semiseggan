@@ -32,11 +32,11 @@ BCE_IGNORE_LABEL = -2
 
 # Model settings
 PRETRAINED = True
-MODALITY = 'rgb'
+MODALITY = 'middle'
 
 # logging
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
-LOG_DIR = 'refinenetLW_rgb'
+LOG_DIR = 'refinenetLW_middle'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
 CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'

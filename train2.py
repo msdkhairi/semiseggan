@@ -169,7 +169,7 @@ def main():
 
 
 
-    for epoch in range(last_epoch+1, settings.EPOCHS):
+    for epoch in range(last_epoch+1, settings.EPOCHS+1):
 
         train_one_epoch(model, optimizer, dataloader, epoch, 
                         upsample, ce_loss, writer, print_freq=5)
@@ -178,9 +178,9 @@ def main():
             save_checkpoint(epoch, model, optimizer, lr_scheduler)
 
         # save the final model
-        if epoch >= settings.EPOCHS-1:
+        if epoch >= settings.EPOCHS:
             print('saving the final model')
-            save_checkpoint(epoch+1, model, optimizer, lr_scheduler)
+            save_checkpoint(epoch, model, optimizer, lr_scheduler)
 
         lr_scheduler.step()
         

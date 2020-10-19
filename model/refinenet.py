@@ -26,7 +26,7 @@ class RefineNet(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         # resent
-        resnet = torchvision.models.resnet101(pretrained=pretrained)
+        resnet = torchvision.models.resnet50(pretrained=pretrained)
         self.layer1 = resnet.layer1
         self.layer2 = resnet.layer2
         self.layer3 = resnet.layer3

@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.metrics import confusion_matrix
 
-from model.refinenet2 import Segmentor
+from model.refinenet import Segmentor
 from dataset import TrainDataset, TestDataset
 
 from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d, FocalLoss
@@ -44,7 +44,7 @@ def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsamp
     loss_G_seg_values = []
 
     eval_trainval = False
-    if epoch % eval_freq == 0 and epoch != 0:
+    if epoch % eval_freq == 0:
         eval_trainval = True
 
     # confusion matrix ; to track metrics such as mIoU during training

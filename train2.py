@@ -109,6 +109,7 @@ def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsamp
         save_metrics(conf_mat, writer, epoch*max_iter, 'Train')
         conf_mat = evaluate(model, test_dataloader)
         save_metrics(conf_mat, writer, epoch*max_iter, 'Val')
+        model.train()
 
 
 def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):

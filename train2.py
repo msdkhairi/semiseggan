@@ -13,11 +13,12 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import confusion_matrix
 
 from model.refinenet2 import Segmentor
-from dataset import TrainDataset
+from dataset import TrainDataset, TestDataset
 
 from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d, FocalLoss
 
-from metric import evaluate
+from metric import evaluate_conf_mat
+from eval import evaluate
 
 import settings
 
@@ -27,23 +28,28 @@ def makedir(directory):
         os.makedirs(directory)
 
 
-def save_metrics(conf_mat, writer, epoch):
-    metrics = evaluate(conf_mat)
-    writer.add_scalar('Pixel Accuracy/Train', metrics['pAcc'], epoch)
-    writer.add_scalar('Mean Accuracy/Train', metrics['mAcc'], epoch)
-    writer.add_scalar('mIoU/Train', metrics['mIoU'], epoch)
-    writer.add_scalar('fwavacc/Train', metrics['fIoU'], epoch)
+def save_metrics(conf_mat, writer, step, mode='Train'):
+    metrics = evaluate_conf_mat(conf_mat)
+    writer.add_scalar('Pixel Accuracy/{}'.format(mode), metrics['pAcc'], step)
+    writer.add_scalar('Mean Accuracy/{}'.format(mode), metrics['mAcc'], step)
+    writer.add_scalar('Mean IoU/{}'.format(mode), metrics['mIoU'], step)
+    writer.add_scalar('fwavacc/{}'.format(mode), metrics['fIoU'], step)
 
 
-def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writer, print_freq=10):
-
-    # confusion matrix ; to track metrics such as mIoU during training
-    conf_mat = np.zeros((settings.NUM_CLASSES, settings.NUM_CLASSES))
+def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsample, ce_loss, writer, print_freq=10, eval_freq=settings.EVAL_FREQ):
 
     max_iter = len(dataloader)
 
     # initialize losses
     loss_G_seg_values = []
+
+    eval_trainval = False
+    if epoch % eval_freq == 0 and epoch != 0:
+        eval_trainval = True
+
+    # confusion matrix ; to track metrics such as mIoU during training
+    conf_mat = np.zeros((settings.NUM_CLASSES, settings.NUM_CLASSES))
+        
 
     for i_iter, batch in enumerate(dataloader):
 
@@ -58,6 +64,7 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
         target_mask = target_mask.unsqueeze(dim=1)
 
         # get the output of generator
+        predict = None
         if settings.MODALITY == 'rgb':
             predict = upsample(model(images))
         elif settings.MODALITY == 'middle':
@@ -74,19 +81,16 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
 
         loss_G_seg_values.append(loss_G_seg.data.cpu().numpy())
 
-        # # get pred and gt to compute confusion matrix
-        # seg_pred = np.argmax(predict.detach().cpu().numpy(), axis=1)
-        # seg_gt = labels.cpu().numpy().copy()
+        if eval_trainval:
+            # get pred and gt to compute confusion matrix
+            seg_pred = np.argmax(predict.detach().cpu().numpy(), axis=1)
+            seg_gt = labels.cpu().numpy().copy()
 
-        # seg_pred = seg_pred[target_mask.squeeze(dim=1).cpu().numpy()]
-        # seg_gt = seg_gt[target_mask.squeeze(dim=1).cpu().numpy()]
+            seg_pred = seg_pred[target_mask.squeeze(dim=1).cpu().numpy()]
+            seg_gt = seg_gt[target_mask.squeeze(dim=1).cpu().numpy()]
 
-        # conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
-
-        # with open(settings.LOG_FILE, "a") as f:
-        #     output_log = '{}, {},\t {:.8f}\n'.format(epoch, i_iter, loss_G_seg_value)
-        #     f.write(output_log)
-
+            conf_mat += confusion_matrix(seg_gt, seg_pred, labels=np.arange(settings.NUM_CLASSES))
+        
         
         if i_iter % print_freq == 0 and i_iter != 0:
             loss_G_seg_value = np.mean(loss_G_seg_values)
@@ -97,7 +101,15 @@ def train_one_epoch(model, optimizer, dataloader, epoch, upsample, ce_loss, writ
             print("epoch = {:3d}/{:3d}: iter = {:3d},\t loss_seg = {:.3f}".format(
                 epoch, settings.EPOCHS, i_iter, loss_G_seg_value))
 
-    # save_metrics(conf_mat, writer, epoch)
+            # with open(settings.LOG_FILE, "a") as f:
+            #     output_log = '{}, {},\t {:.8f}\n'.format(epoch, i_iter, loss_G_seg_value)
+            #     f.write(output_log)
+    
+    if eval_trainval:
+        save_metrics(conf_mat, writer, epoch*max_iter, 'Train')
+        conf_mat = evaluate(model, test_dataloader)
+        save_metrics(conf_mat, writer, epoch*max_iter, 'Val')
+
 
 def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):
     checkpoint = {
@@ -135,6 +147,10 @@ def main():
                                 shuffle=True, num_workers=settings.NUM_WORKERS,
                                 pin_memory=True, drop_last=True)
 
+    test_dataset = TestDataset(data_root=settings.DATA_ROOT_VAL, data_list=settings.DATA_LIST_VAL)
+    test_dataloader = data.DataLoader(test_dataset, batch_size=1, shuffle=False, 
+                                num_workers=settings.NUM_WORKERS, pin_memory=True)
+
     # optimizer for generator network (segmentor)
     optimizer = optim.SGD(model.optim_parameters(settings.LR), lr=settings.LR, 
                         momentum=settings.LR_MOMENTUM, weight_decay=settings.WEIGHT_DECAY)
@@ -171,8 +187,8 @@ def main():
 
     for epoch in range(last_epoch+1, settings.EPOCHS+1):
 
-        train_one_epoch(model, optimizer, dataloader, epoch, 
-                        upsample, ce_loss, writer, print_freq=5)
+        train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, 
+                        upsample, ce_loss, writer, print_freq=5, eval_freq=settings.EVAL_FREQ)
 
         if epoch % settings.CHECKPOINT_FREQ == 0 and epoch != 0:
             save_checkpoint(epoch, model, optimizer, lr_scheduler)
@@ -181,6 +197,7 @@ def main():
         if epoch >= settings.EPOCHS:
             print('saving the final model')
             save_checkpoint(epoch, model, optimizer, lr_scheduler)
+            writer.close()
 
         lr_scheduler.step()
         

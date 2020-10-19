@@ -32,17 +32,17 @@ BCE_IGNORE_LABEL = -2
 
 # Model settings
 PRETRAINED = True
-MODALITY = 'middle'
+MODALITY = 'rgb'
 
 # logging
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
-LOG_DIR = 'refinenetLW_middle'
+LOG_DIR = 'refinenet18_rgb'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
 CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
 
 
-# 
+# EVAL and RESUME
 RESUME_TRAIN = False
 LAST_CHECKPOINT = CHECKPOINT_DIR + '/CHECKPOINT_500.tar'
 OUTPUT_FILE = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '.txt'
@@ -52,11 +52,9 @@ OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 
 # Train settings
 DEVICE = 'gpu'
-SAVE_EVERY = 10000
 CHECKPOINT_FREQ = 50
-
-MAX_ITER = 70000
 EPOCHS = 500
+EVAL_FREQ = 10 # number of epochs where model is evaluated on train data and validation data
 
 
 LR = 5e-4

@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 from model.refinenet import Segmentor
 from dataset import TestDataset
 
-from metric import evaluate
+from metric import evaluate_conf_mat
 
 import settings
 
@@ -56,6 +56,38 @@ def write_to_log(metrics, print_output=False):
             if print_output:
                 print(output, end='')
 
+
+def evaluate(model, dataloader):
+
+    model.eval()
+    model.cuda()
+
+    upsample = nn.Upsample((427, 561), mode='bilinear', align_corners=True)
+
+    conf_mat = np.zeros((settings.NUM_CLASSES, settings.NUM_CLASSES))
+
+    for i_iter, batch in enumerate(dataloader):
+        images, depths, labels = batch
+        images = images.cuda()
+        depths = depths.cuda()
+        labels = labels.cuda()
+
+        predict = None
+        with torch.no_grad():
+            if settings.MODALITY == 'rgb':
+                predict = upsample(model(images))
+            elif settings.MODALITY == 'middle':
+                predict = upsample(model(images, depths))
+
+        seg_pred = np.argmax(predict[0].cpu().numpy(), axis=0)
+        seg_gt = labels[0].cpu().numpy()
+
+        conf_mat += confusion_matrix(seg_gt.reshape(-1), seg_pred.reshape(-1), labels=np.arange(settings.NUM_CLASSES))
+
+        if i_iter % 100 == 0:
+           print('{} val images processed'.format(i_iter))
+
+    return conf_mat
 
 def main():
     if not os.path.exists(settings.OUTPUT_DIR):
@@ -118,7 +150,7 @@ def main():
            print('{} images processed' .format(i_iter))
 
 
-    metrics = evaluate(conf_mat)
+    metrics = evaluate_conf_mat(conf_mat)
     write_to_log(metrics, print_output=True)
 
 

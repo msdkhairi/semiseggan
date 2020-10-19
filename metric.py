@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix
 
 import settings
 
-def evaluate(conf_mat):
+def evaluate_conf_mat(conf_mat):
 
 
     ignore_label = settings.IGNORE_LABEL

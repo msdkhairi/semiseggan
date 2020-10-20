@@ -125,6 +125,10 @@ def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):
 
 def main():
 
+    # set torch and numpy seed for reproducibility
+    torch.manual_seed(27)
+    np.random.seed(27)
+
     # tensorboard writer
     writer = SummaryWriter(settings.TENSORBOARD_DIR)
     # makedir snapshot

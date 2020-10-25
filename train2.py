@@ -20,20 +20,9 @@ from loss import CrossEntropyLoss2d, BCEWithLogitsLoss2d, FocalLoss
 from metric import evaluate_conf_mat
 from eval import evaluate
 
+from utils import makedir, save_metrics
+
 import settings
-
-
-def makedir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-
-def save_metrics(conf_mat, writer, step, mode='Train'):
-    metrics = evaluate_conf_mat(conf_mat)
-    writer.add_scalar('Pixel Accuracy/{}'.format(mode), metrics['pAcc'], step)
-    writer.add_scalar('Mean Accuracy/{}'.format(mode), metrics['mAcc'], step)
-    writer.add_scalar('Mean IoU/{}'.format(mode), metrics['mIoU'], step)
-    writer.add_scalar('fwavacc/{}'.format(mode), metrics['fIoU'], step)
 
 
 def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsample, ce_loss, writer, print_freq=10, eval_freq=settings.EVAL_FREQ):
@@ -111,7 +100,6 @@ def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsamp
         save_metrics(conf_mat, writer, epoch*max_iter, 'Val')
         model.train()
 
-
 def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):
     checkpoint = {
         'epoch': epoch,
@@ -122,6 +110,8 @@ def save_checkpoint(epoch, model, optimizer, lr_scheduler, verbose=True):
     if verbose:
         print('saving a checkpoint in epoch {}'.format(epoch))
     torch.save(checkpoint, osp.join(settings.CHECKPOINT_DIR, 'CHECKPOINT_'+str(epoch)+'.tar'))
+
+
 
 def main():
 

@@ -165,7 +165,7 @@ def train_one_epoch(model_G, model_D, optim_G, optim_D, dataloader, test_dataloa
         # pass ground truth to discriminator
         
         gt = labels.clone().detach().cuda()
-        gt_one_hot = F.one_hot(gt, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).float()
+        gt_one_hot = F.one_hot(gt, num_classes=settings.NUM_CLASSES).permute(0,3,1,2).contiguous().float()
         D_output = upsample(model_D(gt_one_hot))
 
         loss_D = bce_loss(D_output, make_D_label(gt_label, D_output), target_mask)

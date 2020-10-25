@@ -200,7 +200,7 @@ def train_one_epoch(model_G, model_D, optim_G, optim_D, dataloader, test_dataloa
         save_metrics(conf_mat, writer, epoch*max_iter, 'Train')
         conf_mat = evaluate(model_G, test_dataloader)
         save_metrics(conf_mat, writer, epoch*max_iter, 'Val')
-        model.train()
+        model_G.train()
 
 
 def main():
@@ -249,14 +249,14 @@ def main():
     
     # lr scheduler for optimi_G
     lr_lambda_G = lambda epoch: (1 - epoch / settings.EPOCHS) ** settings.LR_POLY_POWER
-    lr_scheduler_G = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+    lr_scheduler_G = optim.lr_scheduler.LambdaLR(optim_G, lr_lambda=lr_lambda_G)
 
     # optimizer for discriminator network
     optim_D = optim.Adam(model_D.parameters(), settings.LR_D)
 
     # lr scheduler for optimi_D
     lr_lambda_D = lambda epoch: (1 - epoch / settings.EPOCHS) ** settings.LR_POLY_POWER
-    lr_scheduler_D = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
+    lr_scheduler_D = optim.lr_scheduler.LambdaLR(optim_D, lr_lambda=lr_lambda_D)
 
     # losses
     ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor

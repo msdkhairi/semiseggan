@@ -25,7 +25,7 @@ from utils import makedir, save_metrics
 import settings
 
 
-def train_one_epoch(model, optimizer, lr_scheduler, dataloader, test_dataloader, epoch, upsample, ce_loss, writer, print_freq=10, eval_freq=settings.EVAL_FREQ):
+def train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, upsample, ce_loss, writer, print_freq=10, eval_freq=settings.EVAL_FREQ):
 
     max_iter = len(dataloader)
 
@@ -67,7 +67,7 @@ def train_one_epoch(model, optimizer, lr_scheduler, dataloader, test_dataloader,
         optimizer.zero_grad()
         loss_G_seg.backward()
         optimizer.step()
-        lr_scheduler.step(epoch + i_iter / max_iter)
+        # lr_scheduler.step(epoch + i_iter / max_iter)
 
         loss_G_seg_values.append(loss_G_seg.data.cpu().numpy())
 
@@ -154,7 +154,8 @@ def main():
     # lr scheduler for optimizer
     # lr_lambda = lambda epoch: (1 - epoch / settings.EPOCHS) ** settings.LR_POLY_POWER
     # lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
-    lr_scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=40*len(dataloader), eta_min=1e-7)
+    # lr_scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=40*len(dataloader), eta_min=1e-7)
+    lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, step_size=15, gamma=0.9)
 
 
     # losses
@@ -184,7 +185,7 @@ def main():
 
     for epoch in range(last_epoch+1, settings.EPOCHS+1):
 
-        train_one_epoch(model, optimizer, lr_scheduler, dataloader, test_dataloader, epoch, 
+        train_one_epoch(model, optimizer, dataloader, test_dataloader, epoch, 
                         upsample, ce_loss, writer, print_freq=5, eval_freq=settings.EVAL_FREQ)
 
         if epoch % settings.CHECKPOINT_FREQ == 0 and epoch != 0:
@@ -196,7 +197,7 @@ def main():
             save_checkpoint(epoch, model, optimizer, lr_scheduler)
             writer.close()
 
-        # lr_scheduler.step()
+        lr_scheduler.step()
         
         
 if __name__ == "__main__":

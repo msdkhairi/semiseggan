@@ -155,7 +155,7 @@ def main():
     # lr_lambda = lambda epoch: (1 - epoch / settings.EPOCHS) ** settings.LR_POLY_POWER
     # lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
     # lr_scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=40*len(dataloader), eta_min=1e-7)
-    lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, step_size=15, gamma=0.9)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.9)
 
 
     # losses

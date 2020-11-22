@@ -62,7 +62,7 @@ def evaluate(model, dataloader):
     model.eval()
     model.cuda()
 
-    upsample = nn.Upsample((427, 561), mode='bilinear', align_corners=True)
+    upsample = nn.Upsample((480, 640), mode='bilinear', align_corners=True)
 
     conf_mat = np.zeros((settings.NUM_CLASSES, settings.NUM_CLASSES))
 

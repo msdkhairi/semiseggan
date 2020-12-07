@@ -44,7 +44,7 @@ MODALITY = 'rgb'
 
 # logging
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
-LOG_DIR = 'refinenet50_rgb_lrStep'
+LOG_DIR = 'refinenet50_rgb'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
 CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
@@ -62,7 +62,7 @@ OUTPUT_DIR = LOG_DIR_ROOT + 'results_' + DATASET + '_' + LOG_DIR + '/'
 MANUAL_SEED = 27
 
 DEVICE = 'gpu'
-CHECKPOINT_FREQ = 50
+CHECKPOINT_FREQ = 25
 EPOCHS = 500
 EVAL_FREQ = 10 # number of epochs where model is evaluated on train data and validation data
 
@@ -72,7 +72,9 @@ LR_D = 1e-4
 LR_MOMENTUM = 0.9
 LR_DECAY_ITER = 10
 LR_POLY_POWER = 0.9
+LR_POLY_STEP = 10
 WEIGHT_DECAY = 1e-4
+
 
 LAMBDA_ADV_SEG = 1e-2
 

@@ -159,8 +159,8 @@ def main():
 
 
     # losses
-    ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor
-    # ce_loss = FocalLoss(ignore_index=settings.IGNORE_LABEL, gamma=2)
+    # ce_loss = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL) # to use for segmentor
+    ce_loss = FocalLoss(ignore_index=settings.IGNORE_LABEL, gamma=2)
 
 
     # upsampling for the network output

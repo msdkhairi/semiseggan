@@ -44,7 +44,7 @@ MODALITY = 'rgb'
 
 # logging
 LOG_DIR_ROOT = 'drive/My Drive/Logs/'
-LOG_DIR = 'refinenet50_rgb'
+LOG_DIR = 'refinenet50_rgb_FL'
 TENSORBOARD_DIR = LOG_DIR_ROOT + 'runs/' + DATASET + '/'+ LOG_DIR
 CHECKPOINT_DIR = LOG_DIR_ROOT + 'checkpoints_' + DATASET + '_' + LOG_DIR
 LOG_FILE = LOG_DIR_ROOT + 'log_' + DATASET + '_' + LOG_DIR + '.txt'
@@ -67,7 +67,7 @@ EPOCHS = 500
 EVAL_FREQ = 10 # number of epochs where model is evaluated on train data and validation data
 
 
-LR = 5e-4
+LR = 2e-4
 LR_D = 1e-4
 LR_MOMENTUM = 0.9
 LR_DECAY_ITER = 10

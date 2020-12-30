@@ -67,12 +67,12 @@ EPOCHS = 500
 EVAL_FREQ = 10 # number of epochs where model is evaluated on train data and validation data
 
 
-LR = 5e-4
-LR_D = 1e-4
+LR = 1e-4
+LR_D = 5e-5
 LR_MOMENTUM = 0.9
 LR_DECAY_ITER = 10
 LR_POLY_POWER = 0.9
-LR_POLY_STEP = 10
+LR_POLY_STEP = 20
 WEIGHT_DECAY = 1e-4
 
 

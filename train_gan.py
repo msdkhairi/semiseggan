@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.metrics import confusion_matrix
 
-from model.generator import Segmentor
+from model.refinenet import Segmentor
 from model.discriminator import Discriminator
 from dataset import TrainDataset, TestDataset
 
